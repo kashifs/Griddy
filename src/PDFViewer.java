@@ -34,21 +34,14 @@ public class PDFViewer extends JFrame {
 			return;
 		}
 
-		int pagenum = (args.length == 1) ? 1 : Integer.parseInt(args[1]);
-		if (pagenum < 1)
-			pagenum = 1;
 
 		RandomAccessFile raf = new RandomAccessFile(new File(args[0]), "r");
 		FileChannel fc = raf.getChannel();
 		ByteBuffer buf = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
 		PDFFile pdfFile = new PDFFile(buf);
 
-		int numpages = pdfFile.getNumPages();
-		System.out.println("Number of pages = " + numpages);
-		if (pagenum > numpages)
-			pagenum = numpages;
 
-		PDFPage page = pdfFile.getPage(pagenum);
+		PDFPage page = pdfFile.getPage(0);
 
 		Rectangle2D r2d = page.getBBox();
 
@@ -88,7 +81,7 @@ public class PDFViewer extends JFrame {
 						// System.out.println("Code " + e.getID());
 
 						if (e.getKeyCode() == KeyEvent.VK_UP) {
-							System.out.println("up");
+							System.out.println("UP");
 						}
 						if (e.getKeyCode() == KeyEvent.VK_DOWN) {
 							System.out.println("DOWN");
