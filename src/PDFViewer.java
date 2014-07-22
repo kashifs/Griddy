@@ -27,6 +27,8 @@ public class PDFViewer extends JFrame {
 		pack();
 		setVisible(true);
 	}
+	
+
 
 	public static void main(final String[] args) throws IOException {
 		if (args.length < 1 || args.length > 2) {
@@ -56,15 +58,12 @@ public class PDFViewer extends JFrame {
 		image = page.getImage((int) width, (int) height, r2d, null, true, true);
 
 
-		Runnable r2 = new Runnable() {
+
+		Runnable r = new Runnable() {
 
 			public void run() {
 				PDFViewer viewer = new PDFViewer("PDF Viewer: " + args[0]);
-
-				// JFrame frame = new JFrame();
-				JPanel panel = new JPanel();
-
-				// frame.getContentPane().add(panel);
+				final JPanel panel = new JPanel();
 
 				viewer.getContentPane().add(panel);
 
@@ -77,8 +76,6 @@ public class PDFViewer extends JFrame {
 					}
 
 					public void keyPressed(KeyEvent e) {
-						// System.out.println("Pressed " + e.getKeyChar());
-						// System.out.println("Code " + e.getID());
 
 						if (e.getKeyCode() == KeyEvent.VK_UP) {
 							System.out.println("UP");
@@ -93,14 +90,13 @@ public class PDFViewer extends JFrame {
 							System.out.println("RIGHT");
 						}
 					}
+					
 				});
 
 				panel.setFocusable(true);
 				panel.requestFocusInWindow();
 			}
-
 		};
-		// EventQueue.invokeLater(r);
-		EventQueue.invokeLater(r2);
+		EventQueue.invokeLater(r);
 	}
 }
