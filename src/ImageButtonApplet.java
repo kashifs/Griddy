@@ -7,8 +7,7 @@ import java.util.*;
 public class ImageButtonApplet extends Applet implements ActionListener,
 		KeyListener {
 	private Vector v;
-	private int numOfImages;
-	private int currentImage;
+
 	private Button b;
 	private ImagePanel ip;
 	private Image[][] images;
@@ -53,36 +52,23 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 		images = new Image[numRows][numCols];
 		imageCol = 0;
 		imageRow = 0;
-		
+
 		v = new Vector(10);
-		numOfImages = 0;
-		currentImage = 0;
+
 		setLayout(new BorderLayout());
-		Image tempImage = getImage(getCodeBase(),
-				"/Users/kashif/Desktop/air1.jpg");
-		ip = new ImagePanel(tempImage);
-		v.insertElementAt(tempImage, numOfImages);
-		numOfImages++;
-		tempImage = getImage(getCodeBase(), "/Users/kashif/Desktop/air2.jpg");
-		v.insertElementAt(tempImage, numOfImages);
-		numOfImages++;
-		tempImage = getImage(getCodeBase(), "/Users/kashif/Desktop/air3.jpg");
-		v.insertElementAt(tempImage, numOfImages);
-		numOfImages++;
+		images[0][0] = getImage(getCodeBase(), "/Users/kashif/Desktop/air1.jpg");
+		images[0][1] = getImage(getCodeBase(), "/Users/kashif/Desktop/air2.jpg");
+		images[0][2] = getImage(getCodeBase(), "/Users/kashif/Desktop/air3.jpg");
+		images[0][2] = getImage(getCodeBase(), "/Users/kashif/Desktop/air4.jpg");
+		
+		ip = new ImagePanel(images[0][0]);
 		add(ip, BorderLayout.CENTER);
-		b = new Button("Next!");
-		b.addActionListener(this);
 		ip.addKeyListener(this);
-		Panel p = new Panel();
-		p.add(b);
-		add(p, BorderLayout.SOUTH);
 		ip.requestFocus();
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		currentImage = (currentImage + 1) % numOfImages;
-		Image i = (Image) v.elementAt(currentImage);
-		ip.setImage(i);
+//		ip.setImage(0);
 		ip.repaint();
 		repaint();
 	}
@@ -91,33 +77,41 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 		int keyCode = e.getKeyCode();
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
-			System.out.println("up");
-			
-			if(imageRow != 0)
-				imageRow--;		
+			// System.out.println("up");
+
+			if (imageRow != 0)
+				imageRow--;
+			printRowColumn();
+			changeImage();
 			break;
-			
+
 		case KeyEvent.VK_DOWN:
-			System.out.println("down");
-			
-			if(imageRow != (numRows - 1))
+			// System.out.println("down");
+
+			if (imageRow != (numRows - 1))
 				imageRow++;
+			printRowColumn();
+			changeImage();
 			break;
-			
+
 		case KeyEvent.VK_LEFT:
-			System.out.println("left");
-			
-			if(imageCol != 0)
+			// System.out.println("left");
+
+			if (imageCol != 0)
 				imageCol--;
+			printRowColumn();
+			changeImage();
 			break;
-			
+
 		case KeyEvent.VK_RIGHT:
-			System.out.println("right");
-			
-			if(imageCol != (numCols - 1))
+			// System.out.println("right");
+
+			if (imageCol != (numCols - 1))
 				imageCol++;
+			printRowColumn();
+			changeImage();
 			break;
-			
+
 		}
 	}
 
@@ -129,5 +123,15 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
 
+	}
+	
+	public void printRowColumn(){
+		System.out.println("Image Row: " + imageRow + " Image Column: " + imageCol);
+	}
+	
+	public void changeImage(){
+		ip.setImage(images[imageRow][imageCol]);
+		ip.repaint();
+		repaint();
 	}
 }
