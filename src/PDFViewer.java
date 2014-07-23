@@ -37,7 +37,8 @@ public class PDFViewer extends JFrame {
 		}
 
 
-		RandomAccessFile raf = new RandomAccessFile(new File(args[0]), "r");
+//		RandomAccessFile raf = new RandomAccessFile(new File(args[0]), "r");
+		RandomAccessFile raf = new RandomAccessFile(new File("/Users/kashif/Desktop/0_control.fcs copy_CD45RA-_count.pdf"), "r");		
 		FileChannel fc = raf.getChannel();
 		ByteBuffer buf = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
 		PDFFile pdfFile = new PDFFile(buf);

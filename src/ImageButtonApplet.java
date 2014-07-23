@@ -1,8 +1,11 @@
 import java.applet.*;
 import java.awt.*;
+import java.awt.List;
 import java.awt.event.*;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -11,8 +14,12 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.*;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
 
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
@@ -106,8 +113,7 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 		// int i = 0;
 		// int j = 0;
 		// int k = 0;
-		
-		
+
 		int numPDFs = 0;
 		Vector<String> nameStrings = new Vector<String>();
 
@@ -223,41 +229,55 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 	}
 
 	public void printRowColumn() {
-//		System.out.println("Image Row: " + imageRow + " Image Column: "
-//				+ imageCol);
+		// System.out.println("Image Row: " + imageRow + " Image Column: "
+		// + imageCol);
 	}
 
 	public void printImageName() {
 		System.out.println(imageNames[imageRow][imageCol]);
 	}
 
-	public void changeImage() throws IOException {
-		RandomAccessFile raf = new RandomAccessFile(new File(imageNames[imageRow][imageCol]), "r");
-		FileChannel fc = raf.getChannel();
-		ByteBuffer buf = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
-		PDFFile pdfFile = new PDFFile(buf);
+	public static Image convertPDFToJPG(String src) {
 
+		try {
 
-		PDFPage page = pdfFile.getPage(0);
-
-		Rectangle2D r2d = page.getBBox();
-
-		double width = r2d.getWidth();
-		double height = r2d.getHeight();
-		width /= 144.0;
-		height /= 144.0;
-		int res = Toolkit.getDefaultToolkit().getScreenResolution();
-		width *= res;
-		height *= res;
-
-		Image image = page.getImage((int) width, (int) height, r2d, null, true, true);
-
-		
-//		ip.setImage(images[imageRow][imageCol]);
-		ip.setImage(image);
-		ip.repaint();
-		repaint();
+			// load pdf file in the document object
+			PDDocument doc = PDDocument.load(new FileInputStream(src));
+			// Get all pages from document and store them in a list
+			java.util.List pages = doc.getDocumentCatalog().getAllPages();
+			// create iterator object so it is easy to access each page from the
+			// list
+			Iterator<PDPage> i = pages.iterator();
+			int count = 1; // count variable used to separate each image file
+			// Convert every page of the pdf document to a unique image file
+			System.out.println("Please wait...");
+			while (i.hasNext()) {
+				PDPage page = i.next();
+				BufferedImage bi = page.convertToImage();
+				ImageIO.write(bi, "jpg", new File("/Users/kashif/Desktop/pdfimage_1.jpg"));
+				count++;
+			}
+			System.out.println("Conversion complete");
+		} catch (IOException ie) {
+			ie.printStackTrace();
+		}
+		return null;
 	}
-	
-	
+
+	public void changeImage() throws IOException {
+		
+		convertPDFToJPG("/Users/kashif/Desktop/0_control.fcs copy_CD45RA-_count.pdf");
+		
+		BufferedImage img = null;
+		try {
+		    img = ImageIO.read(new File("/Users/kashif/Desktop/pdfimage_1.jpg"));
+			ip.setImage(img);
+			ip.repaint();
+			repaint();
+		} catch (IOException e) {
+		}
+		
+
+	}
+
 }
