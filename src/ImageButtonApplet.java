@@ -24,8 +24,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 
-public class ImageButtonApplet extends Applet implements ActionListener,
-		KeyListener {
+public class ImageButtonApplet extends Applet implements KeyListener {
 	private Vector v;
 
 	private Button b;
@@ -90,36 +89,22 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 
 		numSamples = 9;
 		numParameters = 122;
-		
+
 		chooseFolder();
 
-		// System.out.println(fileName);
-
-		images = new Image[numRows][numCols];
 		imageCol = 0;
 		imageRow = 0;
 
 		setLayout(new BorderLayout());
-		images[0][0] = getImage(getCodeBase(), "/Users/kashif/Desktop/air1.jpg");
-		// images[0][1] = getImage(getCodeBase(),
-		// "/Users/kashif/Desktop/air2.jpg");
-		// images[0][2] = getImage(getCodeBase(),
-		// "/Users/kashif/Desktop/air3.jpg");
-		// images[0][2] = getImage(getCodeBase(),
-		// "/Users/kashif/Desktop/air4.jpg");
 
-		ip = new ImagePanel(images[0][0]);
+		Image img = getImage(getCodeBase(), "/Users/kashif/Desktop/air1.jpg");
+		ip = new ImagePanel(img);
 		add(ip, BorderLayout.CENTER);
 		ip.addKeyListener(this);
 		ip.requestFocus();
 	}
 
 	public void listFilesForFolder(final File folder) {
-		// int i = 0;
-		// int j = 0;
-		// int k = 0;
-
-		int numPDFs = 0;
 		Vector<String> nameStrings = new Vector<String>();
 
 		for (final File fileEntry : folder.listFiles()) {
@@ -127,37 +112,32 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 				listFilesForFolder(fileEntry);
 			} else {
 				if (fileEntry.getName().endsWith("pdf")) {
-					System.out.println(fileEntry.getAbsolutePath());
+					// System.out.println(fileEntry.getAbsolutePath());
 					nameStrings.add(fileEntry.getAbsolutePath());
 				}
 			}
 		}
 
-		numPDFs = nameStrings.size();
+		int numPDFs = nameStrings.size();
+		int numSamples = numPDFs / numParameters;
 
-		System.out.println("NumPDFs: " + numPDFs);
-		System.out.println("NumParamaters: " + numParameters);
-		System.out.println("Samples: " + numPDFs / numParameters);
+		// System.out.println("NumPDFs: " + numPDFs);
+		// System.out.println("NumParamaters: " + numParameters);
+		// System.out.println("Samples: " + numPDFs / numParameters);
 
-		imageNames = new String[numParameters][(numPDFs / numParameters)];
+		imageNames = new String[numParameters][(numSamples)];
 		int index = 0;
 
-		for (int j = 0; j < numPDFs / numParameters; j++)
+		for (int j = 0; j < numSamples; j++)
 			for (int i = 0; i < numParameters; i++) {
 				imageNames[i][j] = nameStrings.get(index++);
 			}
-	}
-
-	public void actionPerformed(ActionEvent e) {
-		ip.repaint();
-		repaint();
 	}
 
 	public void keyPressed(KeyEvent e) {
 		int keyCode = e.getKeyCode();
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
-			// System.out.println("up");
 
 			if (imageRow != 0) {
 				imageRow--;
@@ -166,14 +146,12 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 				try {
 					changeImage();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
 			break;
 
 		case KeyEvent.VK_DOWN:
-			// System.out.println("down");
 
 			if (imageRow != (numRows - 1)) {
 				imageRow++;
@@ -182,14 +160,12 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 				try {
 					changeImage();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
 			break;
 
 		case KeyEvent.VK_LEFT:
-			// System.out.println("left");
 
 			if (imageCol != 0) {
 				imageCol--;
@@ -198,14 +174,12 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 				try {
 					changeImage();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
 			break;
 
 		case KeyEvent.VK_RIGHT:
-			// System.out.println("right");
 
 			if (imageCol != (numCols - 1)) {
 				imageCol++;
@@ -214,7 +188,6 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 				try {
 					changeImage();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 			}
@@ -234,8 +207,8 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 	}
 
 	public void printRowColumn() {
-		// System.out.println("Image Row: " + imageRow + " Image Column: "
-		// + imageCol);
+		System.out.println("Image Row: " + imageRow + " Image Column: "
+				+ imageCol);
 	}
 
 	public void printImageName() {
@@ -250,20 +223,14 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 			PDDocument doc = PDDocument.load(new FileInputStream(src));
 			// Get all pages from document and store them in a list
 			java.util.List pages = doc.getDocumentCatalog().getAllPages();
-			// create iterator object so it is easy to access each page from the
-			// list
-			Iterator<PDPage> i = pages.iterator();
-			int count = 1; // count variable used to separate each image file
-			// Convert every page of the pdf document to a unique image file
-			System.out.println("Please wait...");
-			while (i.hasNext()) {
-				PDPage page = i.next();
-				BufferedImage bi = page.convertToImage();
-				ImageIO.write(bi, "jpg", new File(
-						"/Users/kashif/Desktop/pdfimage_1.jpg"));
-				count++;
-			}
-			System.out.println("Conversion complete");
+			pages.get(0);
+
+			PDPage page = (PDPage) pages.get(0);
+			BufferedImage bi = page.convertToImage();
+			// Convert pdf page to a unique image file
+			ImageIO.write(bi, "jpg", new File(
+					"/Users/kashif/Desktop/pdfimage_1.jpg"));
+
 		} catch (IOException ie) {
 			ie.printStackTrace();
 		}
@@ -272,7 +239,8 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 
 	public void changeImage() throws IOException {
 
-		convertPDFToJPG("/Users/kashif/Desktop/0_control.fcs copy_CD45RA-_count.pdf");
+//		convertPDFToJPG("/Users/kashif/Desktop/0_control.fcs copy_CD45RA-_count.pdf");
+		convertPDFToJPG(imageNames[imageRow][imageCol]);
 
 		BufferedImage img = null;
 		try {
