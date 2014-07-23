@@ -25,17 +25,14 @@ import com.sun.pdfview.PDFFile;
 import com.sun.pdfview.PDFPage;
 
 public class ImageButtonApplet extends Applet implements KeyListener {
-	private Vector v;
 
-	private Button b;
 	private ImagePanel ip;
-	private Image[][] images;
 	private String[][] imageNames;
 	private int imageRow, imageCol;
 	private int numRows = 36;
 	private int numCols = 9;
-	private int numSamples;
 	private int numParameters;
+	private static PDDocument doc;
 
 	private class ImagePanel extends Panel {
 		private Image i;
@@ -86,8 +83,6 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 	}
 
 	public void init() {
-
-		numSamples = 9;
 		numParameters = 122;
 
 		chooseFolder();
@@ -215,38 +210,25 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 		System.out.println(imageNames[imageRow][imageCol]);
 	}
 
-	public static Image convertPDFToJPG(String src) {
-
-		try {
-
-			// load pdf file in the document object
-			PDDocument doc = PDDocument.load(new FileInputStream(src));
-			// Get all pages from document and store them in a list
-			java.util.List pages = doc.getDocumentCatalog().getAllPages();
-			pages.get(0);
-
-			PDPage page = (PDPage) pages.get(0);
-			BufferedImage bi = page.convertToImage();
-			// Convert pdf page to a unique image file
-			ImageIO.write(bi, "jpg", new File(
-					"/Users/kashif/Desktop/pdfimage_1.jpg"));
-
-		} catch (IOException ie) {
-			ie.printStackTrace();
-		}
-		return null;
-	}
 
 	public void changeImage() throws IOException {
+		if(doc != null)
+			doc.close();
+		
+//		convertPDFToJPG(imageNames[imageRow][imageCol]);
 
-//		convertPDFToJPG("/Users/kashif/Desktop/0_control.fcs copy_CD45RA-_count.pdf");
-		convertPDFToJPG(imageNames[imageRow][imageCol]);
-
-		BufferedImage img = null;
+		
 		try {
-			img = ImageIO
-					.read(new File("/Users/kashif/Desktop/pdfimage_1.jpg"));
-			ip.setImage(img);
+			// load pdf file in the document object
+			doc = PDDocument.load(new FileInputStream(imageNames[imageRow][imageCol]));
+			// Get all pages from document and store them in a list
+			java.util.List pages = doc.getDocumentCatalog().getAllPages();
+
+			PDPage page = (PDPage) pages.get(0);
+
+			
+
+			ip.setImage(page.convertToImage());
 			ip.repaint();
 			repaint();
 		} catch (IOException e) {
