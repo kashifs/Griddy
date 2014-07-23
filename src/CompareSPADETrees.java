@@ -13,7 +13,7 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
-public class ImageButtonApplet extends Applet implements KeyListener {
+public class CompareSPADETrees extends Applet implements KeyListener {
 
 	private ImagePanel ip;
 	private String[][] imageNames;
@@ -22,6 +22,7 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 	private static PDDocument doc;
 
 	private class ImagePanel extends Panel {
+		
 		private Image i;
 
 		ImagePanel(Image im) {
@@ -32,6 +33,7 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 		public void setImage(Image im) {
 			MediaTracker mt = new MediaTracker(this);
 			mt.addImage(im, 0, 500, 500);
+			
 			try {
 				mt.waitForAll();
 			} catch (InterruptedException x) {
@@ -70,8 +72,11 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 	}
 
 	public void init() {
-		this.setSize(800, 800);
+//		setLayout(new FlowLayout());
+		this.setSize(800, 8000);
 		numParameters = 122;
+		
+		
 
 		chooseFolder();
 
@@ -80,9 +85,12 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 
 		setLayout(new BorderLayout());
 
-		Image img = getImage(getCodeBase(), "/Users/kashif/Desktop/air1.jpg");
+		Image img = getImage(getCodeBase(), "/Users/kashif/Projects/Gastro/Griddy/images/black.jpg");
+		
+
 		ip = new ImagePanel(img);
-		add(ip, BorderLayout.CENTER);
+//		add(ip, BorderLayout.CENTER);
+		add(ip);
 		ip.addKeyListener(this);
 		ip.requestFocus();
 	}
@@ -210,6 +218,8 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 			BufferedImage image = page.convertToImage(
 					BufferedImage.TYPE_INT_RGB, 200);
 
+			Image img = getImage(getCodeBase(), "images/black.jpg");
+			
 			ip.setImage(resize(image, 800, 800));
 			ip.repaint();
 			repaint();
