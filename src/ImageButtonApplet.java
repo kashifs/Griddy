@@ -1,37 +1,24 @@
 import java.applet.*;
 import java.awt.*;
-import java.awt.List;
 import java.awt.event.*;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.net.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.*;
 
-import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
+
+import net.coobird.thumbnailator.Thumbnails;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-
-import com.sun.pdfview.PDFFile;
-import com.sun.pdfview.PDFPage;
 
 public class ImageButtonApplet extends Applet implements KeyListener {
 
 	private ImagePanel ip;
 	private String[][] imageNames;
 	private int imageRow, imageCol;
-	private int numRows = 36;
-	private int numCols = 9;
-	private int numParameters;
+	private int numSamples, numParameters;
 	private static PDDocument doc;
 
 	private class ImagePanel extends Panel {
@@ -44,7 +31,7 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 
 		public void setImage(Image im) {
 			MediaTracker mt = new MediaTracker(this);
-			mt.addImage(im, 0);
+			mt.addImage(im, 0, 500, 500);
 			try {
 				mt.waitForAll();
 			} catch (InterruptedException x) {
@@ -77,12 +64,13 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 		int result = folderChooser.showOpenDialog(this);
 		if (result == JFileChooser.APPROVE_OPTION) {
 			File selectedFile = folderChooser.getSelectedFile();
-			System.out.println("SELECTED FILE: " + selectedFile.toString());
+			// System.out.println("SELECTED FILE: " + selectedFile.toString());
 			listFilesForFolder(selectedFile);
 		}
 	}
 
 	public void init() {
+		this.setSize(800, 800);
 		numParameters = 122;
 
 		chooseFolder();
@@ -114,7 +102,7 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 		}
 
 		int numPDFs = nameStrings.size();
-		int numSamples = numPDFs / numParameters;
+		numSamples = numPDFs / numParameters;
 
 		// System.out.println("NumPDFs: " + numPDFs);
 		// System.out.println("NumParamaters: " + numParameters);
@@ -136,8 +124,8 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 
 			if (imageRow != 0) {
 				imageRow--;
-				printRowColumn();
-				printImageName();
+				// printRowColumn();
+				// printImageName();
 				try {
 					changeImage();
 				} catch (IOException e1) {
@@ -148,10 +136,10 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 
 		case KeyEvent.VK_DOWN:
 
-			if (imageRow != (numRows - 1)) {
+			if (imageRow != (numParameters - 1)) {
 				imageRow++;
-				printRowColumn();
-				printImageName();
+				// printRowColumn();
+				// printImageName();
 				try {
 					changeImage();
 				} catch (IOException e1) {
@@ -164,8 +152,8 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 
 			if (imageCol != 0) {
 				imageCol--;
-				printRowColumn();
-				printImageName();
+				// printRowColumn();
+				// printImageName();
 				try {
 					changeImage();
 				} catch (IOException e1) {
@@ -176,10 +164,10 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 
 		case KeyEvent.VK_RIGHT:
 
-			if (imageCol != (numCols - 1)) {
+			if (imageCol != (numSamples - 1)) {
 				imageCol++;
-				printRowColumn();
-				printImageName();
+				// printRowColumn();
+				// printImageName();
 				try {
 					changeImage();
 				} catch (IOException e1) {
@@ -210,30 +198,29 @@ public class ImageButtonApplet extends Applet implements KeyListener {
 		System.out.println(imageNames[imageRow][imageCol]);
 	}
 
-
 	public void changeImage() throws IOException {
-		if(doc != null)
+		if (doc != null)
 			doc.close();
-		
-//		convertPDFToJPG(imageNames[imageRow][imageCol]);
 
-		
 		try {
-			// load pdf file in the document object
-			doc = PDDocument.load(new FileInputStream(imageNames[imageRow][imageCol]));
-			// Get all pages from document and store them in a list
+			doc = PDDocument.load(imageNames[imageRow][imageCol]);
 			java.util.List pages = doc.getDocumentCatalog().getAllPages();
-
 			PDPage page = (PDPage) pages.get(0);
 
-			
+			BufferedImage image = page.convertToImage(
+					BufferedImage.TYPE_INT_RGB, 200);
 
-			ip.setImage(page.convertToImage());
+			ip.setImage(resize(image, 800, 800));
 			ip.repaint();
 			repaint();
 		} catch (IOException e) {
 		}
 
+	}
+
+	public static BufferedImage resize(BufferedImage img, int newW, int newH)
+			throws IOException {
+		return Thumbnails.of(img).size(newW, newH).asBufferedImage();
 	}
 
 }
