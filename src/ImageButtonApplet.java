@@ -71,11 +71,7 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 		}
 	}
 
-	public void init() {
-
-		numSamples = 9;
-		numParameters = 122;
-
+	private void chooseFolder() {
 		JFileChooser folderChooser = new JFileChooser();
 		folderChooser.setCurrentDirectory(new File(System
 				.getProperty("user.home")));
@@ -88,6 +84,14 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 			System.out.println("SELECTED FILE: " + selectedFile.toString());
 			listFilesForFolder(selectedFile);
 		}
+	}
+
+	public void init() {
+
+		numSamples = 9;
+		numParameters = 122;
+		
+		chooseFolder();
 
 		// System.out.println(fileName);
 
@@ -95,13 +99,14 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 		imageCol = 0;
 		imageRow = 0;
 
-		v = new Vector(10);
-
 		setLayout(new BorderLayout());
 		images[0][0] = getImage(getCodeBase(), "/Users/kashif/Desktop/air1.jpg");
-		images[0][1] = getImage(getCodeBase(), "/Users/kashif/Desktop/air2.jpg");
-		images[0][2] = getImage(getCodeBase(), "/Users/kashif/Desktop/air3.jpg");
-		images[0][2] = getImage(getCodeBase(), "/Users/kashif/Desktop/air4.jpg");
+		// images[0][1] = getImage(getCodeBase(),
+		// "/Users/kashif/Desktop/air2.jpg");
+		// images[0][2] = getImage(getCodeBase(),
+		// "/Users/kashif/Desktop/air3.jpg");
+		// images[0][2] = getImage(getCodeBase(),
+		// "/Users/kashif/Desktop/air4.jpg");
 
 		ip = new ImagePanel(images[0][0]);
 		add(ip, BorderLayout.CENTER);
@@ -254,7 +259,8 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 			while (i.hasNext()) {
 				PDPage page = i.next();
 				BufferedImage bi = page.convertToImage();
-				ImageIO.write(bi, "jpg", new File("/Users/kashif/Desktop/pdfimage_1.jpg"));
+				ImageIO.write(bi, "jpg", new File(
+						"/Users/kashif/Desktop/pdfimage_1.jpg"));
 				count++;
 			}
 			System.out.println("Conversion complete");
@@ -265,18 +271,18 @@ public class ImageButtonApplet extends Applet implements ActionListener,
 	}
 
 	public void changeImage() throws IOException {
-		
+
 		convertPDFToJPG("/Users/kashif/Desktop/0_control.fcs copy_CD45RA-_count.pdf");
-		
+
 		BufferedImage img = null;
 		try {
-		    img = ImageIO.read(new File("/Users/kashif/Desktop/pdfimage_1.jpg"));
+			img = ImageIO
+					.read(new File("/Users/kashif/Desktop/pdfimage_1.jpg"));
 			ip.setImage(img);
 			ip.repaint();
 			repaint();
 		} catch (IOException e) {
 		}
-		
 
 	}
 
