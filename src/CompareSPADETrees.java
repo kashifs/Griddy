@@ -16,13 +16,22 @@ import org.apache.pdfbox.pdmodel.PDPage;
 
 public class CompareSPADETrees extends Applet implements KeyListener {
 
+	private static final long serialVersionUID = 1L;
+
 	private ImagePanel ip;
 	private String[][] imageNames;
 	private int imageRow, imageCol;
 	private int numSamples, numParameters;
 	private static PDDocument doc;
+	private File selectedFile;
+
+	private static int IMAGE_QUALITY = 200;
+
+	private boolean arrowPressed = false;
 
 	private class ImagePanel extends Panel {
+
+		private static final long serialVersionUID = 1L;
 
 		private Image i;
 
@@ -59,44 +68,43 @@ public class CompareSPADETrees extends Applet implements KeyListener {
 
 	private void chooseFolder() {
 		JFileChooser folderChooser = new JFileChooser();
-		folderChooser.setCurrentDirectory(new File(System
-				.getProperty("user.home")));
+		File curDirectory = new File(System.getProperty("user.home"));
+		folderChooser.setCurrentDirectory(curDirectory);
 		folderChooser.setDialogTitle("Where are the files located?");
 		folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
 		int result = folderChooser.showOpenDialog(this);
 		if (result == JFileChooser.APPROVE_OPTION) {
-			File selectedFile = folderChooser.getSelectedFile();
-			// System.out.println("SELECTED FILE: " + selectedFile.toString());
-			listFilesForFolder(selectedFile);
+			selectedFile = folderChooser.getSelectedFile();
 		}
 	}
 
 	private boolean isNotNumber(String input) {
 		try {
 			Integer.parseInt(input);
-			System.out.println("here");
 			return false;
 		} catch (Exception e) {
 			return true;
 		}
 	}
 
-	public void init() {
-		this.setSize(800, 8000);
-
+	private void askNumSamples() {
 		String sampleSize;
-
-		numParameters = 122;
-		// numParameters = 201;
-
-		chooseFolder();
-
 		do {
 			sampleSize = JOptionPane.showInputDialog(null,
 					"How many samples do you have?", "# of samples",
 					JOptionPane.QUESTION_MESSAGE);
 		} while (isNotNumber(sampleSize));
+
+		numSamples = Integer.parseInt(sampleSize);
+	}
+
+	public void init() {
+		this.setSize(800, 800);
+
+		chooseFolder();
+		askNumSamples();
+		listFilesForFolder();
 
 		imageCol = 0;
 		imageRow = 0;
@@ -104,101 +112,90 @@ public class CompareSPADETrees extends Applet implements KeyListener {
 		setLayout(new BorderLayout());
 
 		Image img = getImage(getCodeBase(),
-				"/Users/kashif/Projects/Gastro/Griddy/images/black.jpg");
+				"/Users/kashif/Projects/Gastro/Griddy/images/arrows.png");
 
 		ip = new ImagePanel(img);
-		// add(ip, BorderLayout.CENTER);
-		add(ip);
+
+		add(ip, BorderLayout.CENTER);
 		ip.addKeyListener(this);
 		ip.requestFocus();
 	}
 
-	public void listFilesForFolder(final File folder) {
+	public void listFilesForFolder() {
 		Vector<String> nameStrings = new Vector<String>();
 
-		for (final File fileEntry : folder.listFiles()) {
-			if (fileEntry.isDirectory()) {
-				listFilesForFolder(fileEntry);
-			} else {
-				if (fileEntry.getName().endsWith("pdf")) {
-					// System.out.println(fileEntry.getAbsolutePath());
-					nameStrings.add(fileEntry.getAbsolutePath());
-				}
+		for (final File fileEntry : selectedFile.listFiles()) {
+			if (fileEntry.getName().endsWith("pdf")) {
+				nameStrings.add(fileEntry.getAbsolutePath());
 			}
 		}
 
 		int numPDFs = nameStrings.size();
-		numSamples = numPDFs / numParameters;
+		numParameters = numPDFs / numSamples;
 
-		// System.out.println("NumPDFs: " + numPDFs);
-		// System.out.println("NumParamaters: " + numParameters);
-		// System.out.println("Samples: " + numPDFs / numParameters);
+		imageNames = new String[numParameters][numSamples];
 
-		imageNames = new String[numParameters][(numSamples)];
 		int index = 0;
-
 		for (int j = 0; j < numSamples; j++)
 			for (int i = 0; i < numParameters; i++) {
 				imageNames[i][j] = nameStrings.get(index++);
 			}
 	}
 
+
+
 	public void keyPressed(KeyEvent e) {
 		int keyCode = e.getKeyCode();
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
+			if (!arrowPressed) {
+				arrowPressed = true;
+				changeImage();
+				break;
+			}
 
 			if (imageRow != 0) {
 				imageRow--;
-				// printRowColumn();
-				// printImageName();
-				try {
-					changeImage();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+				changeImage();
 			}
 			break;
 
 		case KeyEvent.VK_DOWN:
+			if (!arrowPressed) {
+				arrowPressed = true;
+				changeImage();
+				break;
+			}
 
 			if (imageRow != (numParameters - 1)) {
 				imageRow++;
-				// printRowColumn();
-				// printImageName();
-				try {
-					changeImage();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+				changeImage();
 			}
 			break;
 
 		case KeyEvent.VK_LEFT:
+			if (!arrowPressed) {
+				arrowPressed = true;
+				changeImage();
+				break;
+			}
 
 			if (imageCol != 0) {
 				imageCol--;
-				// printRowColumn();
-				// printImageName();
-				try {
-					changeImage();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+				changeImage();
 			}
 			break;
 
 		case KeyEvent.VK_RIGHT:
+			if (!arrowPressed) {
+				arrowPressed = true;
+				changeImage();
+				break;
+			}
 
 			if (imageCol != (numSamples - 1)) {
 				imageCol++;
-				// printRowColumn();
-				// printImageName();
-				try {
-					changeImage();
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				}
+				changeImage();
 			}
 			break;
 
@@ -206,42 +203,42 @@ public class CompareSPADETrees extends Applet implements KeyListener {
 	}
 
 	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
-	public void printRowColumn() {
+	private void printRowColumn() {
 		System.out.println("Image Row: " + imageRow + " Image Column: "
 				+ imageCol);
 	}
 
-	public void printImageName() {
+	private void printImageName() {
 		System.out.println(imageNames[imageRow][imageCol]);
 	}
 
-	public void changeImage() throws IOException {
-		if (doc != null)
-			doc.close();
-
+	public void changeImage() {
 		try {
+			if (doc != null)
+				doc.close();
+
 			doc = PDDocument.load(imageNames[imageRow][imageCol]);
 			java.util.List pages = doc.getDocumentCatalog().getAllPages();
-			PDPage page = (PDPage) pages.get(0);
 
-			BufferedImage image = page.convertToImage(
-					BufferedImage.TYPE_INT_RGB, 200);
+			// PDPage page = (PDPage)pages.get(0);
+			// BufferedImage image =
+			// page.convertToImage(BufferedImage.TYPE_INT_RGB, 200);
+			// BufferedImage resized = resize(image, 800, 800);
+			// ip.setImage(resized);
 
-			Image img = getImage(getCodeBase(), "images/black.jpg");
-
-			ip.setImage(resize(image, 800, 800));
+			// combine above calls to make faster
+			ip.setImage(resize(((PDPage) pages.get(0)).convertToImage(
+					BufferedImage.TYPE_INT_RGB, IMAGE_QUALITY), 800, 800));
 			ip.repaint();
 			repaint();
 		} catch (IOException e) {
+			printRowColumn();
+			printImageName();
 		}
 
 	}

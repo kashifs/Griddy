@@ -1,4 +1,4 @@
 Griddy
 =====
 
-Java project to easily compare PDF files visually
+Java project to easily compare SPADE PDF files visually
