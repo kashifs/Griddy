@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.*;
 
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 import net.coobird.thumbnailator.Thumbnails;
 
@@ -22,7 +23,7 @@ public class CompareSPADETrees extends Applet implements KeyListener {
 	private static PDDocument doc;
 
 	private class ImagePanel extends Panel {
-		
+
 		private Image i;
 
 		ImagePanel(Image im) {
@@ -33,7 +34,7 @@ public class CompareSPADETrees extends Applet implements KeyListener {
 		public void setImage(Image im) {
 			MediaTracker mt = new MediaTracker(this);
 			mt.addImage(im, 0, 500, 500);
-			
+
 			try {
 				mt.waitForAll();
 			} catch (InterruptedException x) {
@@ -71,25 +72,42 @@ public class CompareSPADETrees extends Applet implements KeyListener {
 		}
 	}
 
+	private boolean isNotNumber(String input) {
+		try {
+			Integer.parseInt(input);
+			System.out.println("here");
+			return false;
+		} catch (Exception e) {
+			return true;
+		}
+	}
+
 	public void init() {
-//		setLayout(new FlowLayout());
 		this.setSize(800, 8000);
+
+		String sampleSize;
+
 		numParameters = 122;
-		
-		
+		// numParameters = 201;
 
 		chooseFolder();
+
+		do {
+			sampleSize = JOptionPane.showInputDialog(null,
+					"How many samples do you have?", "# of samples",
+					JOptionPane.QUESTION_MESSAGE);
+		} while (isNotNumber(sampleSize));
 
 		imageCol = 0;
 		imageRow = 0;
 
 		setLayout(new BorderLayout());
 
-		Image img = getImage(getCodeBase(), "/Users/kashif/Projects/Gastro/Griddy/images/black.jpg");
-		
+		Image img = getImage(getCodeBase(),
+				"/Users/kashif/Projects/Gastro/Griddy/images/black.jpg");
 
 		ip = new ImagePanel(img);
-//		add(ip, BorderLayout.CENTER);
+		// add(ip, BorderLayout.CENTER);
 		add(ip);
 		ip.addKeyListener(this);
 		ip.requestFocus();
@@ -219,7 +237,7 @@ public class CompareSPADETrees extends Applet implements KeyListener {
 					BufferedImage.TYPE_INT_RGB, 200);
 
 			Image img = getImage(getCodeBase(), "images/black.jpg");
-			
+
 			ip.setImage(resize(image, 800, 800));
 			ip.repaint();
 			repaint();
