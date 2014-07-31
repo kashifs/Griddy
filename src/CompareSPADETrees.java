@@ -5,7 +5,6 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
@@ -30,8 +29,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	private static int IMAGE_QUALITY = 200;
 
-	private boolean arrowPressed = false;
-
 	private static boolean isNotNumber(String input) {
 		try {
 			Integer.parseInt(input);
@@ -54,7 +51,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			PDPage page = (PDPage) pages.get(0);
 			BufferedImage image = page.convertToImage(
-					BufferedImage.TYPE_INT_RGB, 200);
+					BufferedImage.TYPE_INT_RGB, IMAGE_QUALITY);
 			resized = resize(image, 800, 800);
 			// ip.setImage(resized);
 
@@ -77,11 +74,10 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			frame.setSize(900, 900);
 			frame.setResizable(false);
 			frame.setLocationRelativeTo(null);
-			
+
 			frame.addKeyListener(this);
 			frame.requestFocus();
 		}
-
 
 		frame.getContentPane().add(label1);
 
@@ -96,12 +92,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		int keyCode = e.getKeyCode();
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
-			if (!arrowPressed) {
-				arrowPressed = true;
-				this.showImage();
-				;
-				break;
-			}
 
 			if (imageRow != 0) {
 				imageRow--;
@@ -111,11 +101,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			break;
 
 		case KeyEvent.VK_DOWN:
-			if (!arrowPressed) {
-				arrowPressed = true;
-				this.showImage();
-				break;
-			}
 
 			if (imageRow != (numParameters - 1)) {
 				imageRow++;
@@ -124,11 +109,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			break;
 
 		case KeyEvent.VK_LEFT:
-			if (!arrowPressed) {
-				arrowPressed = true;
-				this.showImage();
-				break;
-			}
 
 			if (imageCol != 0) {
 				imageCol--;
@@ -137,11 +117,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			break;
 
 		case KeyEvent.VK_RIGHT:
-			if (!arrowPressed) {
-				arrowPressed = true;
-				this.showImage();
-				break;
-			}
 
 			if (imageCol != (numSamples - 1)) {
 				imageCol++;
@@ -162,8 +137,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 	}
 
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public static BufferedImage resize(BufferedImage img, int newW, int newH)
@@ -215,8 +188,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 				imageNames[i][j] = nameStrings.get(index++);
 			}
 		}
-
-		String imgStr = "/Users/kashif/Desktop/google.jpg";
+		
 		show1.showImage();
 	}
 
