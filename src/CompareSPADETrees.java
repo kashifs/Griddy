@@ -30,17 +30,18 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 	private static final int KEYCODE_5 = 53;
 	private static final int KEYCODE_6 = 54;
 
+	
 	private static String[][][] imageNames;
 	private static String[][] rawMedianNames, rawFoldNames, medianNames,
 			cvsNames, foldNames, extraNames;
-	private static int imageRow, imageCol;
-	private static int metricNum;
+	private static int metricNum, imageRow, imageCol;
+
 	private static int numSamples;
 
 	private static PDDocument doc;
 	private static File selectedFile;
 
-	private static JLabel label1 = null;
+	private static JLabel label = null;
 	private static JFrame frame = null;
 
 	private static int IMAGE_QUALITY = 200;
@@ -67,41 +68,37 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			doc = PDDocument.load(imageNames[metricNum][imageRow][imageCol]);
 
-			// System.out.println("ImageName: " +
-			// diffMetrics[metricNum][imageRow][imageCol]);
 			java.util.List pages = doc.getDocumentCatalog().getAllPages();
 
 			page = (PDPage) pages.get(0);
 			image = page.convertToImage(BufferedImage.TYPE_INT_RGB,
 					IMAGE_QUALITY);
 			resized = resize(image, 800, 800);
-			// ip.setImage(resized);
 
 		} catch (IOException e) {
-			printRowColumn();
+			printMetricRowColumn();
 			printImageName();
 		}
 
 		ImageIcon image = new ImageIcon(resized);
 
-		if (label1 == null) {
-			label1 = new JLabel(" ", image, JLabel.CENTER);
+		if (label == null) {
+			label = new JLabel(null, image, JLabel.CENTER);
 		} else {
-			label1.setIcon(image);
+			label.setIcon(image);
 		}
 
 		if (frame == null) {
 			frame = new JFrame("SPADE Tree Analysis");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(900, 900);
-			frame.setResizable(false);
 			frame.setLocationRelativeTo(null);
 
 			frame.addKeyListener(this);
 			frame.requestFocus();
 		}
 
-		frame.getContentPane().add(label1);
+		frame.getContentPane().add(label);
 
 		frame.validate();
 		frame.setVisible(true);
@@ -115,17 +112,17 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
-
+			
 			if (imageRow != 0) {
 				imageRow--;
 				showImage();
 			}
-
 			break;
 
 		case KeyEvent.VK_DOWN:
-
-			if (imageRow != (imageNames[metricNum].length - 1)) {
+			
+			int numParameters = imageNames[metricNum].length;
+			if (imageRow != (numParameters - 1)) {
 				imageRow++;
 				showImage();
 			}
@@ -151,21 +148,18 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			metricNum = MEDIAN_METRIC;
 			showImage();
-
 			break;
 
 		case KEYCODE_2:
 
 			metricNum = CVS_METRIC;
 			showImage();
-
 			break;
 
 		case KEYCODE_3:
 
 			metricNum = FOLD_METRIC;
 			showImage();
-
 			break;
 
 		case KEYCODE_4:
@@ -189,13 +183,14 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		}
 	}
 
-	private void printRowColumn() {
-		System.out.println("Image Row: " + imageRow + " Image Column: "
-				+ imageCol);
+	private void printMetricRowColumn() {
+		System.out.println("Metric Number: " + metricNum);
+		System.out.println("Image Row: " + imageRow);
+		System.out.println("Image Column: " + imageCol);
 	}
 
 	private void printImageName() {
-		System.out.println(imageNames[imageRow][imageCol]);
+		System.out.println("Image Filename: " + imageNames[metricNum][imageRow][imageCol]);
 	}
 
 	public void keyReleased(KeyEvent e) {
@@ -208,8 +203,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	private static void promptFolder() {
 		JFileChooser folderChooser = new JFileChooser();
-		File curDirectory = new File(System.getProperty("user.home"));
-		folderChooser.setCurrentDirectory(curDirectory);
 		folderChooser.setDialogTitle("Where are the files located?");
 		folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
@@ -285,6 +278,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			} else {
 				extraStrings.add(fileName);
 			}
+			
 			if (fileName.endsWith("_count.pdf")) {
 				numSamples++;
 			}
@@ -311,6 +305,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 				rawMedianNames[i][j] = rawMedianStrings.get(index++);
 			}
 		}
+		
 
 		index = 0;
 		for (int j = 0; j < numSamples; j++) {
