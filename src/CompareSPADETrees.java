@@ -30,7 +30,8 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 	private static final int KEYCODE_5 = 53;
 	private static final int KEYCODE_6 = 54;
 
-	
+	private static ImageIcon[] images = new ImageIcon[4];
+
 	private static String[][][] imageNames;
 	private static String[][] rawMedianNames, rawFoldNames, medianNames,
 			cvsNames, foldNames, extraNames;
@@ -38,7 +39,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	private static int numSamples;
 
-	private static PDDocument doc;
+	private static PDDocument doc, upDoc, downDoc, leftDoc, rightDoc;
 	private static File selectedFile;
 
 	private static JLabel label = null;
@@ -58,13 +59,58 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		}
 	}
 
+	private static void closeDocs() throws IOException {
+		if (doc != null)
+			doc.close();
+		if (upDoc != null)
+			upDoc.close();
+		if (downDoc != null)
+			downDoc.close();
+		if (leftDoc != null)
+			leftDoc.close();
+		if (rightDoc != null)
+			rightDoc.close();
+	}
+
+	private static void populateImages() {
+
+		String[][] sameMetric = imageNames[metricNum];
+
+		try {
+			closeDocs();
+
+			if (imageRow != 0)
+				upDoc = PDDocument.load(sameMetric[imageRow - 1][imageCol]);
+
+			int numParameters = imageNames[metricNum].length;
+			if (imageRow != (numParameters - 1))
+				downDoc = PDDocument.load(sameMetric[imageRow + 1][imageCol]);
+
+			if (imageCol != 0)
+				leftDoc = PDDocument.load(sameMetric[imageRow][imageCol - 1]);
+
+			if (imageCol != (numSamples - 1))
+				leftDoc = PDDocument.load(sameMetric[imageRow][imageCol + 1]);
+
+			java.util.List pages = doc.getDocumentCatalog().getAllPages();
+
+			page = (PDPage) pages.get(0);
+			image = page.convertToImage(BufferedImage.TYPE_INT_RGB,
+					IMAGE_QUALITY);
+			resized = resize(image, 800, 800);
+		} catch (IOException e) {
+			printMetricRowColumn();
+			printImageName();
+		}
+
+	}
+
 	public void showImage() {
 
 		resized = null;
 
 		try {
-			if (doc != null)
-				doc.close();
+			closeDocs();
 
 			doc = PDDocument.load(imageNames[metricNum][imageRow][imageCol]);
 
@@ -104,6 +150,11 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		frame.setVisible(true);
 	}
 
+	public static BufferedImage resize(BufferedImage img, int newW, int newH)
+			throws IOException {
+		return Thumbnails.of(img).size(newW, newH).asBufferedImage();
+	}
+
 	public void keyTyped(KeyEvent e) {
 	}
 
@@ -112,7 +163,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
-			
+
 			if (imageRow != 0) {
 				imageRow--;
 				showImage();
@@ -120,7 +171,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			break;
 
 		case KeyEvent.VK_DOWN:
-			
+
 			int numParameters = imageNames[metricNum].length;
 			if (imageRow != (numParameters - 1)) {
 				imageRow++;
@@ -183,22 +234,18 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		}
 	}
 
-	private void printMetricRowColumn() {
+	private static void printMetricRowColumn() {
 		System.out.println("Metric Number: " + metricNum);
 		System.out.println("Image Row: " + imageRow);
 		System.out.println("Image Column: " + imageCol);
 	}
 
-	private void printImageName() {
-		System.out.println("Image Filename: " + imageNames[metricNum][imageRow][imageCol]);
+	private static void printImageName() {
+		System.out.println("Image Filename: "
+				+ imageNames[metricNum][imageRow][imageCol]);
 	}
 
 	public void keyReleased(KeyEvent e) {
-	}
-
-	public static BufferedImage resize(BufferedImage img, int newW, int newH)
-			throws IOException {
-		return Thumbnails.of(img).size(newW, newH).asBufferedImage();
 	}
 
 	private static void promptFolder() {
@@ -278,7 +325,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			} else {
 				extraStrings.add(fileName);
 			}
-			
+
 			if (fileName.endsWith("_count.pdf")) {
 				numSamples++;
 			}
@@ -305,7 +352,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 				rawMedianNames[i][j] = rawMedianStrings.get(index++);
 			}
 		}
-		
 
 		index = 0;
 		for (int j = 0; j < numSamples; j++) {
