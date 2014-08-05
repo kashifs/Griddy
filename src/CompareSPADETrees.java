@@ -21,21 +21,22 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 	private static final int FOLD_METRIC = 2;
 	private static final int RAW_MEDIAN_METRIC = 3;
 	private static final int RAW_FOLD_METRIC = 4;
+	private static final int EXTRA_METRIC = 5;
 
 	private static final int KEYCODE_1 = 49;
 	private static final int KEYCODE_2 = 50;
 	private static final int KEYCODE_3 = 51;
 	private static final int KEYCODE_4 = 52;
 	private static final int KEYCODE_5 = 53;
+	private static final int KEYCODE_6 = 54;
 
 	private static String[][][] imageNames;
-	private static String[][] rawMedianNames, rawFoldNames,
-			medianNames, cvsNames, foldNames;
+	private static String[][] rawMedianNames, rawFoldNames, medianNames,
+			cvsNames, foldNames, extraNames;
 	private static int imageRow, imageCol;
 	private static int metricNum;
 	private static int numSamples;
 
-	private static int numParameters;
 	private static PDDocument doc;
 	private static File selectedFile;
 
@@ -64,10 +65,10 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			if (doc != null)
 				doc.close();
 
-
 			doc = PDDocument.load(imageNames[metricNum][imageRow][imageCol]);
-			
-//			System.out.println("ImageName: " + diffMetrics[metricNum][imageRow][imageCol]);
+
+			// System.out.println("ImageName: " +
+			// diffMetrics[metricNum][imageRow][imageCol]);
 			java.util.List pages = doc.getDocumentCatalog().getAllPages();
 
 			page = (PDPage) pages.get(0);
@@ -111,7 +112,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	public void keyPressed(KeyEvent e) {
 		int keyCode = e.getKeyCode();
-		System.out.println("Keycode: " + keyCode);
+
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
 
@@ -124,7 +125,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 		case KeyEvent.VK_DOWN:
 
-			if (imageRow != (numParameters - 1)) {
+			if (imageRow != (imageNames[metricNum].length - 1)) {
 				imageRow++;
 				showImage();
 			}
@@ -176,6 +177,12 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		case KEYCODE_5:
 
 			metricNum = RAW_FOLD_METRIC;
+			showImage();
+			break;
+
+		case KEYCODE_6:
+
+			metricNum = EXTRA_METRIC;
 			showImage();
 			break;
 
@@ -247,8 +254,6 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 	}
 
 	public static void main(String[] args) throws IOException {
-		CompareSPADETrees show1 = new CompareSPADETrees();
-
 		promptFolder();
 
 		numSamples = 0;
@@ -257,15 +262,16 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		metricNum = 0;
 
 		// List Files for folder////////////////////////////
-		Vector<String> nameStrings = new Vector<String>();
 		Vector<String> rawFoldStrings = new Vector<String>();
 		Vector<String> rawMedianStrings = new Vector<String>();
 		Vector<String> medianStrings = new Vector<String>();
 		Vector<String> cvsStrings = new Vector<String>();
 		Vector<String> foldStrings = new Vector<String>();
+		Vector<String> extraStrings = new Vector<String>();
 
 		for (final File fileEntry : selectedFile.listFiles()) {
 			String fileName = fileEntry.getAbsolutePath();
+
 			if (fileName.contains("_raw_medians")) {
 				rawMedianStrings.add(fileName);
 			} else if (fileName.contains("_raw_fold")) {
@@ -277,32 +283,26 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			} else if (fileName.contains("_fold")) {
 				foldStrings.add(fileName);
 			} else {
-				// System.out.println("Filename: " + fileName +
-				// " Should not be here.");
+				extraStrings.add(fileName);
 			}
-			if (fileName.endsWith("pdf")) {
-				nameStrings.add(fileEntry.getAbsolutePath());
-				if (fileEntry.getName().endsWith("_count.pdf")) {
-					numSamples++;
-				}
+			if (fileName.endsWith("_count.pdf")) {
+				numSamples++;
 			}
 		}
-
-		int numPDFs = nameStrings.size();
-		numParameters = numPDFs / numSamples;
 
 		int numRawMedianParams = rawMedianStrings.size() / numSamples;
 		int numRawFoldParams = rawFoldStrings.size() / numSamples;
 		int numMedianParams = medianStrings.size() / numSamples;
 		int numCVSParams = cvsStrings.size() / numSamples;
 		int numFoldParams = foldStrings.size() / numSamples;
-
+		int numExtraParams = extraStrings.size() / numSamples;
 
 		rawMedianNames = new String[numRawMedianParams][numSamples];
 		rawFoldNames = new String[numRawFoldParams][numSamples];
 		medianNames = new String[numMedianParams][numSamples];
 		cvsNames = new String[numCVSParams][numSamples];
 		foldNames = new String[numFoldParams][numSamples];
+		extraNames = new String[numExtraParams][numSamples];
 
 		int index = 0;
 
@@ -340,15 +340,23 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			}
 		}
 
-		imageNames = new String[5][][];
+		index = 0;
+		for (int j = 0; j < numSamples; j++) {
+			for (int i = 0; i < numExtraParams; i++) {
+				extraNames[i][j] = extraStrings.get(index++);
+			}
+		}
+
+		imageNames = new String[6][][];
 		imageNames[0] = medianNames;
 		imageNames[1] = cvsNames;
 		imageNames[2] = foldNames;
 		imageNames[3] = rawMedianNames;
 		imageNames[4] = rawFoldNames;
+		imageNames[5] = extraNames;
 
-
-		show1.showImage();
+		CompareSPADETrees show = new CompareSPADETrees();
+		show.showImage();
 	}
 
 }
