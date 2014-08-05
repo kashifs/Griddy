@@ -16,8 +16,23 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	private static final long serialVersionUID = 1L;
 
-	private static String[][] imageNames;
-	private int imageRow, imageCol;
+	private static final int MEDIAN_METRIC = 0;
+	private static final int CVS_METRIC = 1;
+	private static final int FOLD_METRIC = 2;
+	private static final int RAW_MEDIAN_METRIC = 3;
+	private static final int RAW_FOLD_METRIC = 4;
+
+	private static final int KEYCODE_1 = 49;
+	private static final int KEYCODE_2 = 50;
+	private static final int KEYCODE_3 = 51;
+	private static final int KEYCODE_4 = 52;
+	private static final int KEYCODE_5 = 53;
+
+	private static String[][][] imageNames;
+	private static String[][] rawMedianNames, rawFoldNames,
+			medianNames, cvsNames, foldNames;
+	private static int imageRow, imageCol;
+	private static int metricNum;
 	private static int numSamples;
 
 	private static int numParameters;
@@ -28,6 +43,9 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 	private static JFrame frame = null;
 
 	private static int IMAGE_QUALITY = 200;
+
+	private static PDPage page;
+	private static BufferedImage resized, image;
 
 	private static boolean isNotNumber(String input) {
 		try {
@@ -40,18 +58,21 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	public void showImage() {
 
-		BufferedImage resized = null;
+		resized = null;
 
 		try {
 			if (doc != null)
 				doc.close();
 
-			doc = PDDocument.load(imageNames[imageRow][imageCol]);
+
+			doc = PDDocument.load(imageNames[metricNum][imageRow][imageCol]);
+			
+//			System.out.println("ImageName: " + diffMetrics[metricNum][imageRow][imageCol]);
 			java.util.List pages = doc.getDocumentCatalog().getAllPages();
 
-			PDPage page = (PDPage) pages.get(0);
-			BufferedImage image = page.convertToImage(
-					BufferedImage.TYPE_INT_RGB, IMAGE_QUALITY);
+			page = (PDPage) pages.get(0);
+			image = page.convertToImage(BufferedImage.TYPE_INT_RGB,
+					IMAGE_QUALITY);
 			resized = resize(image, 800, 800);
 			// ip.setImage(resized);
 
@@ -90,12 +111,13 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	public void keyPressed(KeyEvent e) {
 		int keyCode = e.getKeyCode();
+		System.out.println("Keycode: " + keyCode);
 		switch (keyCode) {
 		case KeyEvent.VK_UP:
 
 			if (imageRow != 0) {
 				imageRow--;
-				this.showImage();
+				showImage();
 			}
 
 			break;
@@ -104,7 +126,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			if (imageRow != (numParameters - 1)) {
 				imageRow++;
-				this.showImage();
+				showImage();
 			}
 			break;
 
@@ -112,7 +134,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			if (imageCol != 0) {
 				imageCol--;
-				this.showImage();
+				showImage();
 			}
 			break;
 
@@ -120,8 +142,41 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			if (imageCol != (numSamples - 1)) {
 				imageCol++;
-				this.showImage();
+				showImage();
 			}
+			break;
+
+		case KEYCODE_1:
+
+			metricNum = MEDIAN_METRIC;
+			showImage();
+
+			break;
+
+		case KEYCODE_2:
+
+			metricNum = CVS_METRIC;
+			showImage();
+
+			break;
+
+		case KEYCODE_3:
+
+			metricNum = FOLD_METRIC;
+			showImage();
+
+			break;
+
+		case KEYCODE_4:
+
+			metricNum = RAW_MEDIAN_METRIC;
+			showImage();
+			break;
+
+		case KEYCODE_5:
+
+			metricNum = RAW_FOLD_METRIC;
+			showImage();
 			break;
 
 		}
@@ -144,10 +199,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		return Thumbnails.of(img).size(newW, newH).asBufferedImage();
 	}
 
-	public static void main(String[] args) {
-		CompareSPADETrees show1 = new CompareSPADETrees();
-
-		// Get Folder///////////////////////////////////////
+	private static void promptFolder() {
 		JFileChooser folderChooser = new JFileChooser();
 		File curDirectory = new File(System.getProperty("user.home"));
 		folderChooser.setCurrentDirectory(curDirectory);
@@ -158,15 +210,9 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		if (result == JFileChooser.APPROVE_OPTION) {
 			selectedFile = folderChooser.getSelectedFile();
 		}
+	}
 
-		// List Files for folder////////////////////////////
-		Vector<String> nameStrings = new Vector<String>();
-
-		for (final File fileEntry : selectedFile.listFiles()) {
-			if (fileEntry.getName().endsWith("pdf")) {
-				nameStrings.add(fileEntry.getAbsolutePath());
-			}
-		}
+	private static void promptSampleSize() {
 
 		String sampleSize;
 		do {
@@ -176,19 +222,132 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		} while (isNotNumber(sampleSize));
 
 		numSamples = Integer.parseInt(sampleSize);
+	}
+
+	private static void printMemoryStatistics() {
+		int mb = 1024 * 1024;
+
+		// Getting the runtime reference from system
+		Runtime runtime = Runtime.getRuntime();
+
+		System.out.println("##### Heap utilization statistics [MB] #####");
+
+		// Print used memory
+		System.out.println("Used Memory:"
+				+ (runtime.totalMemory() - runtime.freeMemory()) / mb);
+
+		// Print free memory
+		System.out.println("Free Memory:" + runtime.freeMemory() / mb);
+
+		// Print total available memory
+		System.out.println("Total Memory:" + runtime.totalMemory() / mb);
+
+		// Print Maximum available memory
+		System.out.println("Max Memory:" + runtime.maxMemory() / mb);
+	}
+
+	public static void main(String[] args) throws IOException {
+		CompareSPADETrees show1 = new CompareSPADETrees();
+
+		promptFolder();
+
+		numSamples = 0;
+		imageRow = 0;
+		imageCol = 0;
+		metricNum = 0;
+
+		// List Files for folder////////////////////////////
+		Vector<String> nameStrings = new Vector<String>();
+		Vector<String> rawFoldStrings = new Vector<String>();
+		Vector<String> rawMedianStrings = new Vector<String>();
+		Vector<String> medianStrings = new Vector<String>();
+		Vector<String> cvsStrings = new Vector<String>();
+		Vector<String> foldStrings = new Vector<String>();
+
+		for (final File fileEntry : selectedFile.listFiles()) {
+			String fileName = fileEntry.getAbsolutePath();
+			if (fileName.contains("_raw_medians")) {
+				rawMedianStrings.add(fileName);
+			} else if (fileName.contains("_raw_fold")) {
+				rawFoldStrings.add(fileName);
+			} else if (fileName.contains("_medians")) {
+				medianStrings.add(fileName);
+			} else if (fileName.contains("_cvs")) {
+				cvsStrings.add(fileName);
+			} else if (fileName.contains("_fold")) {
+				foldStrings.add(fileName);
+			} else {
+				// System.out.println("Filename: " + fileName +
+				// " Should not be here.");
+			}
+			if (fileName.endsWith("pdf")) {
+				nameStrings.add(fileEntry.getAbsolutePath());
+				if (fileEntry.getName().endsWith("_count.pdf")) {
+					numSamples++;
+				}
+			}
+		}
 
 		int numPDFs = nameStrings.size();
 		numParameters = numPDFs / numSamples;
 
-		imageNames = new String[numParameters][numSamples];
+		int numRawMedianParams = rawMedianStrings.size() / numSamples;
+		int numRawFoldParams = rawFoldStrings.size() / numSamples;
+		int numMedianParams = medianStrings.size() / numSamples;
+		int numCVSParams = cvsStrings.size() / numSamples;
+		int numFoldParams = foldStrings.size() / numSamples;
+
+
+		rawMedianNames = new String[numRawMedianParams][numSamples];
+		rawFoldNames = new String[numRawFoldParams][numSamples];
+		medianNames = new String[numMedianParams][numSamples];
+		cvsNames = new String[numCVSParams][numSamples];
+		foldNames = new String[numFoldParams][numSamples];
 
 		int index = 0;
+
 		for (int j = 0; j < numSamples; j++) {
-			for (int i = 0; i < numParameters; i++) {
-				imageNames[i][j] = nameStrings.get(index++);
+			for (int i = 0; i < numRawMedianParams; i++) {
+				rawMedianNames[i][j] = rawMedianStrings.get(index++);
 			}
 		}
-		
+
+		index = 0;
+		for (int j = 0; j < numSamples; j++) {
+			for (int i = 0; i < numRawFoldParams; i++) {
+				rawFoldNames[i][j] = rawFoldStrings.get(index++);
+			}
+		}
+
+		index = 0;
+		for (int j = 0; j < numSamples; j++) {
+			for (int i = 0; i < numMedianParams; i++) {
+				medianNames[i][j] = medianStrings.get(index++);
+			}
+		}
+
+		index = 0;
+		for (int j = 0; j < numSamples; j++) {
+			for (int i = 0; i < numCVSParams; i++) {
+				cvsNames[i][j] = cvsStrings.get(index++);
+			}
+		}
+
+		index = 0;
+		for (int j = 0; j < numSamples; j++) {
+			for (int i = 0; i < numFoldParams; i++) {
+				foldNames[i][j] = foldStrings.get(index++);
+			}
+		}
+
+		imageNames = new String[5][][];
+		imageNames[0] = medianNames;
+		imageNames[1] = cvsNames;
+		imageNames[2] = foldNames;
+		imageNames[3] = rawMedianNames;
+		imageNames[4] = rawFoldNames;
+
+
 		show1.showImage();
 	}
 
