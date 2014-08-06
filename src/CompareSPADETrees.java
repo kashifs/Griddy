@@ -5,12 +5,20 @@ import net.coobird.thumbnailator.Thumbnails;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
+import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class CompareSPADETrees extends JFrame implements KeyListener {
 
@@ -30,6 +38,15 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 	private static final int KEYCODE_5 = 53;
 	private static final int KEYCODE_6 = 54;
 
+	private static final int NTHREADS = 4;
+
+	private static final int UP_POSITION = 0;
+	private static final int DOWN_POSITION = 1;
+	private static final int LEFT_POSITION = 2;
+	private static final int RIGHT_POSITION = 3;
+
+	private static int position = 0;
+
 	private static ImageIcon[] images = new ImageIcon[4];
 
 	private static String[][][] imageNames;
@@ -39,7 +56,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 	private static int numSamples;
 
-	private static PDDocument doc, upDoc, downDoc, leftDoc, rightDoc;
+	private static PDDocument doc;
 	private static File selectedFile;
 
 	private static JLabel label = null;
@@ -59,79 +76,71 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 		}
 	}
 
-	private static void closeDocs() throws IOException {
-		if (doc != null)
-			doc.close();
-		if (upDoc != null)
-			upDoc.close();
-		if (downDoc != null)
-			downDoc.close();
-		if (leftDoc != null)
-			leftDoc.close();
-		if (rightDoc != null)
-			rightDoc.close();
-	}
-
 	private static void populateImages() {
 
 		String[][] sameMetric = imageNames[metricNum];
 
-		try {
-			closeDocs();
+		ExecutorService executor = Executors.newFixedThreadPool(NTHREADS);
 
-			if (imageRow != 0)
-				upDoc = PDDocument.load(sameMetric[imageRow - 1][imageCol]);
-
-			int numParameters = imageNames[metricNum].length;
-			if (imageRow != (numParameters - 1))
-				downDoc = PDDocument.load(sameMetric[imageRow + 1][imageCol]);
-
-			if (imageCol != 0)
-				leftDoc = PDDocument.load(sameMetric[imageRow][imageCol - 1]);
-
-			if (imageCol != (numSamples - 1))
-				leftDoc = PDDocument.load(sameMetric[imageRow][imageCol + 1]);
-
-			java.util.List pages = doc.getDocumentCatalog().getAllPages();
-
-			page = (PDPage) pages.get(0);
-			image = page.convertToImage(BufferedImage.TYPE_INT_RGB,
-					IMAGE_QUALITY);
-			resized = resize(image, 800, 800);
-		} catch (IOException e) {
-			printMetricRowColumn();
-			printImageName();
+		if (imageRow != 0) {
+			Runnable upWorker = new CacheImage(
+					sameMetric[imageRow - 1][imageCol], images, UP_POSITION);
+			executor.execute(upWorker);
 		}
 
+		if (imageRow != (imageNames[metricNum].length - 1)) {
+			Runnable downWorker = new CacheImage(
+					sameMetric[imageRow + 1][imageCol], images, DOWN_POSITION);
+			executor.execute(downWorker);
+		}
+
+		if (imageCol != 0) {
+			Runnable leftWorker = new CacheImage(
+					sameMetric[imageRow][imageCol - 1], images, LEFT_POSITION);
+			executor.execute(leftWorker);
+		}
+
+		if (imageCol != numSamples - 1) {
+			Runnable rightWorker = new CacheImage(
+					sameMetric[imageRow][imageCol + 1], images, RIGHT_POSITION);
+			executor.execute(rightWorker);
+		}
+
+		executor.shutdown();
 	}
 
-	public void showImage() {
+	public synchronized void showImage() {
 
 		resized = null;
+		ImageIcon iconImage = null;
+		if (images[position] == null) { //'images == null'??
+			try {
+				System.out.println("It was null");
+				doc = PDDocument
+						.load(imageNames[metricNum][imageRow][imageCol]);
 
-		try {
-			closeDocs();
+				java.util.List pages = doc.getDocumentCatalog().getAllPages();
 
-			doc = PDDocument.load(imageNames[metricNum][imageRow][imageCol]);
+				page = (PDPage) pages.get(0);
+				image = page.convertToImage(BufferedImage.TYPE_INT_RGB,
+						IMAGE_QUALITY);
+				resized = resize(image, 800, 800);
 
-			java.util.List pages = doc.getDocumentCatalog().getAllPages();
+			} catch (IOException e) {
+				printMetricRowColumn();
+				printImageName();
+			}
 
-			page = (PDPage) pages.get(0);
-			image = page.convertToImage(BufferedImage.TYPE_INT_RGB,
-					IMAGE_QUALITY);
-			resized = resize(image, 800, 800);
-
-		} catch (IOException e) {
-			printMetricRowColumn();
-			printImageName();
+			iconImage = new ImageIcon(resized);
+		} else {
+			System.out.println("it was not null");
+			iconImage = images[position];
 		}
 
-		ImageIcon image = new ImageIcon(resized);
-
 		if (label == null) {
-			label = new JLabel(null, image, JLabel.CENTER);
+			label = new JLabel(null, iconImage, JLabel.CENTER);
 		} else {
-			label.setIcon(image);
+			label.setIcon(iconImage);
 		}
 
 		if (frame == null) {
@@ -148,6 +157,15 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 		frame.validate();
 		frame.setVisible(true);
+
+		try {
+			if (doc != null)
+				doc.close();
+		} catch (IOException e) {
+			System.out.println("Error closing document.");
+		}
+
+		populateImages();
 	}
 
 	public static BufferedImage resize(BufferedImage img, int newW, int newH)
@@ -166,6 +184,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			if (imageRow != 0) {
 				imageRow--;
+				position = UP_POSITION;
 				showImage();
 			}
 			break;
@@ -175,6 +194,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 			int numParameters = imageNames[metricNum].length;
 			if (imageRow != (numParameters - 1)) {
 				imageRow++;
+				position = DOWN_POSITION;
 				showImage();
 			}
 			break;
@@ -183,6 +203,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			if (imageCol != 0) {
 				imageCol--;
+				position = LEFT_POSITION;
 				showImage();
 			}
 			break;
@@ -191,6 +212,7 @@ public class CompareSPADETrees extends JFrame implements KeyListener {
 
 			if (imageCol != (numSamples - 1)) {
 				imageCol++;
+				position = RIGHT_POSITION;
 				showImage();
 			}
 			break;
