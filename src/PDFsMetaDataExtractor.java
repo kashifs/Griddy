@@ -49,8 +49,7 @@ public class PDFsMetaDataExtractor {
    }
    
    //uses file names containing "raw_medians" to then get channels. This will miss the channels that are
-   //without parameter, such as percenttotal, count, and percenttotalratiolog for fold runs.
-   //suggest putting these in with 
+   //without metric, such as percenttotal, count, and percenttotalratiolog for fold runs, so we add them in manually after
    private void setListOfChannels(){
       _channels = new ArrayList<String>();
       ArrayList<String> tempList = new ArrayList<String>();
